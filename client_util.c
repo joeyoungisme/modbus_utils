@@ -103,6 +103,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    dprint("Function Code = %d\n", func_code);
+
     if(ref_addr < 0 || ref_addr > 65535) {
         printf(message, argv[0]);
         exit(EXIT_FAILURE);
@@ -119,73 +121,78 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    printf("New entity Success.... \n");
+    dprint("New entity Success.... \n");
 
     if(modbus_connect(ent->mb) == -1) {
         perror("modbus connect");
         goto exit;
     }
 
-    printf("Modbus Connected!!\n");
+    dprint("Modbus Connected!!\n");
 
     for(int index = 0; index < FUNCTION_AMOUNT; ++index) {
-        int res = 0;
         switch(func_code & (0x01 << index)) {
             case MB_COIL:
+                dprint("Function : Coil ...\n");
                 ent->coil_data = (uint8_t *)malloc(sizeof(uint8_t) * quantity);
                 memset(ent->coil_data, 0, sizeof(uint8_t) * quantity);
-                res = modbus_read_bits(ent->mb, ref_addr, quantity, ent->coil_data);
-                if(res == -1)
+                ent->coil_res = modbus_read_bits(ent->mb, ref_addr, quantity, ent->coil_data);
+                if(ent->coil_res == -1) 
                     perror("Coil Read");
-                else
-                //open & write & close
+                //else open & write & close
                 break;
             case MB_INPUT:
+                dprint("Function : Input .... \n");
                 ent->input_data = (uint8_t *)malloc(sizeof(uint8_t) * quantity);
                 memset(ent->input_data, 0, sizeof(uint8_t) * quantity);
-                res = modbus_read_input_bits(ent->mb, ref_addr, quantity, ent->input_data);
-                if(res == -1)
+                ent->input_res = modbus_read_input_bits(ent->mb, ref_addr, quantity, ent->input_data);
+                if(ent->input_res == -1) {
                     perror("Input Read");
-                else
-                //open & write & close
+                    goto exit;
+                }
+                //else open & write & close
                 break;
             case MB_HOLDING:
+                dprint("Function : Holding .... \n");
                 ent->holding_data = (uint16_t *)malloc(sizeof(uint16_t) * quantity);
                 memset(ent->holding_data, 0, sizeof(uint16_t) * quantity);
-                res = modbus_read_registers(ent->mb, ref_addr, quantity, ent->holding_data);
-                if(res == -1)
+                ent->holding_res = modbus_read_registers(ent->mb, ref_addr, quantity, ent->holding_data);
+                if(ent->holding_res == -1) { 
                     perror("Holding Read");
-                else
-                //open & write & close
+                    goto exit;
+                }
+                //else open & write & close
                 break;
             case MB_INPUTREG:
+                dprint("Function : InputReg .... \n");
                 ent->inputreg_data = (uint16_t *)malloc(sizeof(uint16_t) * quantity);
                 memset(ent->inputreg_data, 0, sizeof(uint16_t) * quantity);
-                res = modbus_read_input_registers(ent->mb, ref_addr, quantity, ent->inputreg_data);
-                if(res == -1)
+                ent->inputreg_res = modbus_read_input_registers(ent->mb, ref_addr, quantity, ent->inputreg_data);
+                if(ent->inputreg_res == -1) {
                     perror("InputReg Read");
-                else
-                //open & write & close
+                    goto exit;
+                }
+                //else open & write & close
                 break;
         }
     }
 
     for(int index = 0; index < quantity; ++index) {
         int curr_addr = ref_addr + index;
-        if(ent->coil_data)
+        if(ent->coil_data && ent->coil_res != -1)
             printf("Coil %d : %d\t", curr_addr, ent->coil_data[index]);
-        if(ent->input_data)
+        if(ent->input_data && ent->input_res != -1)
             printf("Input %d : %d\t", curr_addr, ent->input_data[index]);
-        if(ent->holding_data)
+        if(ent->holding_data && ent->holding_res != -1)
             printf("Holding %d : %d\t", curr_addr, ent->holding_data[index]);
-        if(ent->inputreg_data)
+        if(ent->inputreg_data && ent->inputreg_res != -1)
             printf("InputReg %d : %d\t", curr_addr, ent->inputreg_data[index]);
         printf("\n");
     }
 
 exit:
     //sleep(3);
-    printf("Goodbye!\n");
+    dprint("Goodbye!\n");
 
     modbus_entity_free(ent);
 

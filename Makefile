@@ -1,8 +1,10 @@
 CC=gcc
 CFLAGS=-g -Wall -O3 -I /usr/local/include/modbus/
-LDLIBS=-L /usr/local/lib/ -lmodbus 
+LDLIBS=-L /usr/local/lib/ -lmodbus -lpthread
 
-TARGET=client_util
+CFLAGS+= -DDEBUG_MSG
+
+TARGET=client_util slave_tcp
 
 %: %.c %.h
 	$(CC) -c $(CFLAGS) $@.c

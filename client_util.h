@@ -16,6 +16,15 @@
 #define MB_INPUTREG             0x08
 #define FUNCTION_AMOUNT         4
 
+#ifdef  DEBUG_MSG
+#define MYDEBUG                 1
+#else
+#define MYDEBUG                 0
+#endif
+
+#define dprint(fmt, ...) \
+    do { if(MYDEBUG) printf(fmt, ##__VA_ARGS__); }while(0)
+
 typedef enum {
     MB_RTU,
     MB_TCP,
@@ -25,9 +34,16 @@ typedef struct __mb_ent {
     modbus_t *mb;
     MB_TYPE type;
 
+    int coil_res;
     uint8_t *coil_data;
+
+    int input_res;
     uint8_t *input_data;
+
+    int holding_res;
     uint16_t *holding_data;
+
+    int inputreg_res;
     uint16_t *inputreg_data;
 
 }modbus_entity;
